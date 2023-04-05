@@ -35,17 +35,34 @@ jobs:
           - with_boost: [true, false]
     name: build-vs${{ matrix.vs }}-${{ matrix.toolset }}-std-${{ matrix.cxxstd }}
     runs-on: ${{ matrix.os }}
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
     steps:
       - uses: actions/checkout@v3
       - name: Check
         run: |
           cmake --version
+      - name: Setup Boost
+        uses: MarkusJx/install-boost@v2.4.4
+        id: install-boost
+        if: ${{ matrix.with_boost }}
+        with:
+          boost_version: 1.81.0
+          platform_version: ${{matrix.vs}}
+          toolset: msvc
       - name: Configure
-        run: |
-          cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G "Visual Studio ${{ matrix.vs == '2022' && '17' || '16' }} ${{matrix.vs }}" -A ${{ matrix.architecture }} -T ${{ matrix.toolset }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+        run: >
+          cmake -S ${{ github.workspace }}
+          -B ${{ github.workspace }}/build
+          -G "Visual Studio ${{ matrix.vs == '2022' && '17' || '16' }} ${{matrix.vs }}"
+          -A ${{ matrix.architecture }}
+          -T ${{ matrix.toolset }}
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+          -DBoost_INCLUDE_DIR=${{steps.install-boost.outputs.BOOST_ROOT}}/include
+          -DBoost_LIBRARY_DIRS=${{steps.install-boost.outputs.BOOST_ROOT}}/lib
+          -DNANODBC_ENABLE_UNICODE=${{ matrix.with_boost && 'ON' || 'OFF'}}
+          -DNANODBC_ENABLE_BOOST=${{ matrix.with_boost && 'ON' || 'OFF'}}
+        env:
+          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       - name: Build
         run: |
           cmake --build ${{ github.workspace }}/build

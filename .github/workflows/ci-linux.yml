@@ -74,50 +74,47 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { cxxstd: '20', cxx: clang++-14,  cc: clang-14,  os: ubuntu-22.04, pkg: 'libc++-14-dev libc++abi-14-dev' }
-          - { cxxstd: '17', cxx: clang++-14,  cc: clang-14,  os: ubuntu-22.04, pkg: 'libc++-14-dev libc++abi-14-dev' }
-          - { cxxstd: '14', cxx: clang++-14,  cc: clang-14,  os: ubuntu-22.04, pkg: 'libc++-14-dev libc++abi-14-dev' }
-          - { cxxstd: '20', cxx: clang++-13,  cc: clang-13,  os: ubuntu-22.04, pkg: 'libc++-13-dev libc++abi-13-dev' }
-          - { cxxstd: '17', cxx: clang++-13,  cc: clang-13,  os: ubuntu-22.04, pkg: 'libc++-13-dev libc++abi-13-dev' }
-          - { cxxstd: '14', cxx: clang++-13,  cc: clang-13,  os: ubuntu-22.04, pkg: 'libc++-13-dev libc++abi-13-dev' }
-          - { cxxstd: '17', cxx: clang++-12,  cc: clang-12,  os: ubuntu-20.04, pkg: 'libc++-12-dev libc++abi-12-dev' }
-          - { cxxstd: '14', cxx: clang++-12,  cc: clang-12,  os: ubuntu-20.04, pkg: 'libc++-12-dev libc++abi-12-dev' }
-          - { cxxstd: '17', cxx: clang++-11,  cc: clang-11,  os: ubuntu-20.04, pkg: 'libc++-11-dev libc++abi-11-dev' }
-          - { cxxstd: '14', cxx: clang++-11,  cc: clang-11,  os: ubuntu-20.04, pkg: 'libc++-11-dev libc++abi-11-dev' }
-          - { cxxstd: '17', cxx: clang++-10,  cc: clang-10,  os: ubuntu-20.04, pkg: 'libc++-10-dev libc++abi-10-dev' }
-          - { cxxstd: '14', cxx: clang++-10,  cc: clang-10,  os: ubuntu-20.04, pkg: 'libc++-10-dev libc++abi-10-dev' }
-          - { cxxstd: '17', cxx: clang++-9,   cc: clang-9,   os: ubuntu-20.04, pkg: 'libc++-9-dev libc++abi-9-dev' }
-          - { cxxstd: '14', cxx: clang++-9,   cc: clang-9,   os: ubuntu-20.04, pkg: 'libc++-9-dev libc++abi-9-dev' }
-          - { cxxstd: '17', cxx: clang++-8,   cc: clang-8,   os: ubuntu-20.04, pkg: 'libc++-8-dev libc++abi-8-dev' }
-          - { cxxstd: '14', cxx: clang++-8,   cc: clang-8,   os: ubuntu-20.04, pkg: 'libc++-8-dev libc++abi-8-dev' }
-          - { cxxstd: '17', cxx: clang++-7,   cc: clang-7,   os: ubuntu-18.04, pkg: 'libc++-7-dev libc++abi-7-dev' }
-          - { cxxstd: '14', cxx: clang++-7,   cc: clang-7,   os: ubuntu-18.04, pkg: 'libc++-dev libc++abi-dev' }
-          - { cxxstd: '17', cxx: clang++-6.0, cc: clang-6.0, os: ubuntu-18.04, pkg: 'libc++-dev libc++abi-dev' }
-          - { cxxstd: '14', cxx: clang++-6.0, cc: clang-6.0, os: ubuntu-18.04, pkg: 'libc++-dev libc++abi-dev' }
-          - { cxxstd: '14', cxx: clang++-5.0, cc: clang-5.0, os: ubuntu-18.04, pkg: 'libc++-dev libc++abi-dev' }
-          - { cxxstd: '14', cxx: clang++-4.0, cc: clang-4.0, os: ubuntu-18.04, pkg: 'libc++-dev libc++abi-dev' }
-          - { cxxstd: '14', cxx: clang++-3.9, cc: clang-3.9, os: ubuntu-18.04, pkg: 'libc++-dev libc++abi-dev' }
+          - cxxstd: ['14', '17', '20']
+          - cxx: ['clang']
+          - compiler_version: ["3.9","4.0", "5.0", '6.0','7', '8', '9', '10','11','12','13','14','15']
+          - with_boost: [true, false]
 
-    name: build-${{ matrix.cc }}-std-${{ matrix.cxxstd }}
+    name: build-${{ matrix.cxx }}++-${{matrix.compiler_version}}-std-${{ matrix.cxxstd }}
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.compiler_version < 7 && 'ubuntu-18.04'}} ${{ matrix.compiler_version >= 7 && matrix.compiler_version < 13 && 'ubuntu-20.04'}} ${{ matrix.compiler_version >= 13 && 'ubuntu-22.04'}}
 
     env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
+      CC: ${{ matrix.cxx }}-${{matrix.compiler_version}}
+      CXX: ${{ matrix.cxx }}++-${{matrix.compiler_version}}
 
     steps:
       - uses: actions/checkout@v3
       - name: Install
-        run: |
-          sudo apt-get install -y cmake ${{ matrix.cc }} ${{ matrix.pkg }}
+        run: >
+          sudo apt-get install -y cmake ${CC}
+          ${{ matrix.compiler_version < 7 && 'libc++-dev libc++abi-dev'}}
+          ${{matrix.compiler_version >= 7 && format('libc++-{0}-dev libc++abi-{0}-dev', matrix.compiler_version)}}
       - name: Check
         run: |
           echo && type ${CXX} && which ${CXX} && ${CXX} --version
           echo && type cmake && which cmake && cmake --version
+      - name: Setup Boost
+        uses: MarkusJx/install-boost@v2.4.4
+        id: install-boost
+        if: ${{ matrix.with_boost }}
+        with:
+          boost_version: 1.81.0
+          toolset: clang
       - name: Configure
-        run: |
-          cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+        run: >
+          cmake -S ${{ github.workspace }}
+          -B ${{ github.workspace }}/build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+          -DBoost_INCLUDE_DIR=${{steps.install-boost.outputs.BOOST_ROOT}}/include
+          -DBoost_LIBRARY_DIRS=${{steps.install-boost.outputs.BOOST_ROOT}}/lib
+          -DNANODBC_ENABLE_UNICODE=${{ matrix.with_boost && 'ON' || 'OFF'}}
+          -DNANODBC_ENABLE_BOOST=${{ matrix.with_boost && 'ON' || 'OFF'}}
       - name: Build
         run: |
           cmake --build ${{ github.workspace }}/build
