@@ -26,13 +26,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - cxxstd: ['14', '17', '20']
-          - toolset: [v141, v142, v143]
-          - vs: [2019, 2022]
-          - architecture: ['x64']
-          - os: ['windows-2019', 'windows-2022']
-          - with_boost: [true, false]
+        cxxstd: ['14', '17', '20']
+        toolset: [v141, v142, v143]
+        vs: [2019, 2022]
+        architecture: ['x64']
+        os: [windows-2019, windows-2022]
+        with_boost: [true, false]
     name: build-vs${{ matrix.vs }}-${{ matrix.toolset }}-std-${{ matrix.cxxstd }}
     runs-on: ${{ matrix.os }}
     steps:

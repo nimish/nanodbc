@@ -73,26 +73,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - cxxstd: [14, 17, 20]
-          - cxx: [clang]
-          - compiler_version:
-              [
-                "3.9",
-                "4.0",
-                "5.0",
-                "6.0",
-                "7",
-                "8",
-                "9",
-                "10",
-                "11",
-                "12",
-                "13",
-                "14",
-                "15",
-              ]
-          - with_boost: [true, false]
+        cxxstd: [14, 17, 20]
+        cxx: [clang]
+        compiler_version:
+            [
+              "3.9",
+              "4.0",
+              "5.0",
+              "6.0",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+            ]
+        with_boost: [true, false]
 
     name: build-${{ matrix.cxx }}++-${{ matrix.compiler_version }}-std-${{ matrix.cxxstd }}
 
