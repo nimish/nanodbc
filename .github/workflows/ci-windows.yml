@@ -27,16 +27,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { cxxstd: '20', toolset: v143, vs: 2022, architecture: x64, os: windows-2022 }
-          - { cxxstd: '17', toolset: v143, vs: 2022, architecture: x64, os: windows-2022 }
-          - { cxxstd: '14', toolset: v143, vs: 2022, architecture: x64, os: windows-2022 }
-          - { cxxstd: '17', toolset: v142, vs: 2019, architecture: x64, os: windows-2019 }
-          - { cxxstd: '14', toolset: v142, vs: 2019, architecture: x64, os: windows-2019 }
-          # Visual Studio 2017
-          - { cxxstd: '17', toolset: v141, vs: 2019, architecture: x64, os: windows-2019 }
-          - { cxxstd: '14', toolset: v141, vs: 2019, architecture: x64, os: windows-2019 }
-          # Visual Studio 2015(TODO: remove as deprecated and to save CI time)
-          #- { cxxstd: '14', toolset: v141, vs: 2019, architecture: x64, os: windows-2019 }
+          - cxxstd: ['14', '17', '20']
+          - toolset: [v141, v142, v143]
+          - vs: [2019, 2022]
+          - architecture: ['x64']
+          - os: ['windows-2019', 'windows-2022']
+          - with_boost: [true, false]
     name: build-vs${{ matrix.vs }}-${{ matrix.toolset }}-std-${{ matrix.cxxstd }}
     runs-on: ${{ matrix.os }}
     env:
