@@ -27,12 +27,11 @@ jobs:
       fail-fast: false
       matrix:
         cxxstd: ['14', '17', '20']
-        toolset: [v141, v142, v143]
-        vs: [2019, 2022]
+        vs: ['2019', '2022']
         architecture: ['x64']
         os: [windows-2019, windows-2022]
         with_boost: [true, false]
-    name: build-vs${{ matrix.vs }}-${{ matrix.toolset }}-std-${{ matrix.cxxstd }}
+    name: build-vs${{ matrix.vs }}-${{ matrix.vs == '2019' && 'v142' || 'v143' }}-std-${{ matrix.cxxstd }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -51,9 +50,9 @@ jobs:
         run: >
           cmake -S ${{ github.workspace }}
           -B ${{ github.workspace }}/build
-          -G "Visual Studio ${{ matrix.vs == '2022' && '17' || '16' }} ${{matrix.vs }}"
+          -G "Visual Studio ${{ matrix.vs == '2022' && '17' || '16' }} ${{ matrix.vs }}"
           -A ${{ matrix.architecture }}
-          -T ${{ matrix.toolset }}
+          -T ${{ matrix.vs == '2019' && 'v142' || 'v143' }}
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
           -DBoost_INCLUDE_DIR=${{steps.install-boost.outputs.BOOST_ROOT}}/include
