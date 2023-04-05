@@ -31,7 +31,7 @@ cmake_policy( SET CMP0127 NEW )
 option( NANODBC_DISABLE_ASYNC "Disable async features entirely (default off)" OFF )
 option( NANODBC_DISABLE_MSSQL_TVP "Do not use MSSQL Table-valued parameter (default off)" OFF )
 option( NANODBC_DISABLE_ASYNC "Disable async features entirely (default off)" OFF )
-option( NANODBC_ENABLE_UNICODE "Enable Unicode support (default on)" OFF )
+option( NANODBC_ENABLE_UNICODE "Enable Unicode support (default off)" OFF )
 option( NANODBC_ENABLE_WORKAROUND_NODATA "Enable SQL_NO_DATA workaround (see Issue #33) (default off)" OFF )
 
 include( CheckCXXCompilerFlag )
@@ -42,10 +42,9 @@ check_cxx_compiler_flag( "--coverage -O0" CXX_COMPILER_SUPPORTS_COVERAGE )
 include( CMakeDependentOption )
 cmake_dependent_option( NANODBC_FORCE_LIBCXX "Force the use of libc++ (default on if compiler supports it)" ON "CXX_COMPILER_SUPPORTS_LIBCXX" OFF )
 
-
-cmake_dependent_option( NANODBC_BUILD_EXAMPLES "Build examples (default on)" ON "PROJECT_IS_TOP_LEVEL" OFF)
-cmake_dependent_option( NANODBC_GENERATE_INSTALL "Generate install target (default on)" ON "PROJECT_IS_TOP_LEVEL" OFF)
-cmake_dependent_option( NANODBC_BUILD_TESTS "Build tests (default on)" ON "PROJECT_IS_TOP_LEVEL" OFF)
+cmake_dependent_option( NANODBC_BUILD_EXAMPLES "Build examples (default on if top-level project)" ON "PROJECT_IS_TOP_LEVEL" OFF)
+cmake_dependent_option( NANODBC_GENERATE_INSTALL "Generate install target (default on if top-level project)" ON "PROJECT_IS_TOP_LEVEL" OFF)
+cmake_dependent_option( NANODBC_BUILD_TESTS "Build tests (default on if top-level project)" ON "PROJECT_IS_TOP_LEVEL" OFF)
 
 cmake_dependent_option( NANODBC_ENABLE_BOOST
   "Use Boost for Unicode string convertions (requires Boost.Locale) (default off if Unicode enabled)" OFF
@@ -62,7 +61,7 @@ cmake_dependent_option( NANODBC_ENABLE_COVERAGE "Enable code coverage analysis (
 )
 
 cmake_dependent_option( NANODBC_FORCE_WARNINGS_AS_ERROR
-  "Treat warnings on nanodbc compile as errors" OFF
+  "Treat warnings on nanodbc compile as errors (default off)" OFF
   "(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24.0) OR CXX_COMPILER_SUPPORTS_WERROR" OFF
 )
 
@@ -74,7 +73,7 @@ message( STATUS "nanodbc version: ${NANODBC_VERSION}" )
 ########################################
 # set project-global variables for tests/examples if we're not a subproject
 if( PROJECT_IS_TOP_LEVEL )
-  set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ standard to use for nanodbc")
+  set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ standard to use for nanodbc (default C++14)")
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
 endif()

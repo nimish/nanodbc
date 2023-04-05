@@ -3,7 +3,7 @@ find_package(ODBC REQUIRED)
 add_compile_definitions( "$<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>" )
 
 # Prepare "Catch" library for other executables
-add_library(Catch INTERFACE)
+add_library(Catch INTERFACE catch/catch.hpp)
 add_custom_target(tests)
 
 message( STATUS "Building utility tests")
@@ -17,17 +17,6 @@ add_dependencies(tests utility_tests)
 set(test_list mssql mysql postgresql sqlite vertica) # odbc_test.cpp is a dummy
 
 foreach(test_item IN LISTS test_list)
-  # AppVeyor set common environment variable CI
-  # and nanodbc-specific DB (in CI build configuration).
-  # The CI builds enable DB test for DB specified in build job configuration.
-  if (DEFINED ENV{CI} AND DEFINED ENV{DB})
-    string(TOLOWER $ENV{DB} test_db)
-    string(FIND ${test_db} ${test_item} test_found)
-    if (test_found LESS 0)
-      message(TRACE "Skipping ${test_item} tests")
-      continue()
-    endif()
-  endif()
   message( STATUS "Building ${test_item} tests")
   set(test_name ${test_item}_tests)
   add_executable(${test_name}

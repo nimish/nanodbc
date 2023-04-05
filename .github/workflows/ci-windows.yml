@@ -26,30 +26,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { cxxstd: '20', toolset: v143, vs: 2022, architecture: x64, os: windows-2022 }
-          - { cxxstd: '17', toolset: v143, vs: 2022, architecture: x64, os: windows-2022 }
-          - { cxxstd: '14', toolset: v143, vs: 2022, architecture: x64, os: windows-2022 }
-          - { cxxstd: '17', toolset: v142, vs: 2019, architecture: x64, os: windows-2019 }
-          - { cxxstd: '14', toolset: v142, vs: 2019, architecture: x64, os: windows-2019 }
-          # Visual Studio 2017
-          - { cxxstd: '17', toolset: v141, vs: 2019, architecture: x64, os: windows-2019 }
-          - { cxxstd: '14', toolset: v141, vs: 2019, architecture: x64, os: windows-2019 }
-          # Visual Studio 2015(TODO: remove as deprecated and to save CI time)
-          #- { cxxstd: '14', toolset: v141, vs: 2019, architecture: x64, os: windows-2019 }
-    name: build-vs${{ matrix.vs }}-${{ matrix.toolset }}-std-${{ matrix.cxxstd }}
-    runs-on: ${{ matrix.os }}
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
+        cxxstd: ['14', '17', '20']
+        vs: ['2019', '2022']
+        architecture: ['x64']
+        with_boost: [true, false]
+    name: build-vs${{ matrix.vs }}-${{ matrix.vs == '2019' && 'v142' || 'v143' }}-std-${{ matrix.cxxstd }}${{ matrix.with_boost && '-boost' || ''}}
+    runs-on: windows-${{ matrix.vs }}
     steps:
       - uses: actions/checkout@v3
       - name: Check
         run: |
           cmake --version
+      - name: Setup Boost
+        uses: MarkusJx/install-boost@v2.4.4
+        id: install-boost
+        if: ${{ matrix.with_boost }}
+        with:
+          boost_version: 1.81.0
+          platform_version: ${{matrix.vs}}
+          toolset: msvc
       - name: Configure
-        run: |
-          cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G "Visual Studio ${{ matrix.vs == '2022' && '17' || '16' }} ${{matrix.vs }}" -A ${{ matrix.architecture }} -T ${{ matrix.toolset }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+        run: >
+          cmake -S ${{ github.workspace }}
+          -B ${{ github.workspace }}/build
+          -G "Visual Studio ${{ matrix.vs == '2022' && '17' || '16' }} ${{ matrix.vs }}"
+          -A ${{ matrix.architecture }}
+          -T ${{ matrix.vs == '2019' && 'v142' || 'v143' }}
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+          -DBoost_INCLUDE_DIR=${{steps.install-boost.outputs.BOOST_ROOT}}/include
+          -DBoost_LIBRARY_DIRS=${{steps.install-boost.outputs.BOOST_ROOT}}/lib
+          -DNANODBC_ENABLE_UNICODE=${{ matrix.with_boost && 'ON' || 'OFF'}}
+          -DNANODBC_ENABLE_BOOST=${{ matrix.with_boost && 'ON' || 'OFF'}}
+        env:
+          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       - name: Build
         run: |
           cmake --build ${{ github.workspace }}/build
@@ -62,7 +72,7 @@ jobs:
         include:
           - { cxxstd: '14', configuration: Release, warnings-as-errors: 'OFF' }
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install MinGW
         uses: egor-tensin/setup-mingw@v2
       - name: Check
@@ -76,7 +86,7 @@ jobs:
       # - name: Build
       #   run: |
       #     cmake --build ${{ github.workspace }}/build --verbose
-  
+
   test-utility:
     needs: [build-msvc, build-mingw]
     runs-on: windows-2022
@@ -90,7 +100,7 @@ jobs:
           cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: |
-          cmake --build ${{ github.workspace }}/build --config Release --target utility_tests 
+          cmake --build ${{ github.workspace }}/build --config Release --target utility_tests
       - name: Test
         run: |
           ctest --test-dir ${{ github.workspace }}/build --build-config Release --output-on-failure --no-tests=error -R utility_tests
@@ -121,7 +131,7 @@ jobs:
           cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: |
-          cmake --build ${{ github.workspace }}/build --config Release --target mssql_tests 
+          cmake --build ${{ github.workspace }}/build --config Release --target mssql_tests
       - name: Test
         run: |
           $env:NANODBC_TEST_CONNSTR_MSSQL="Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\MSSQLLocalDB;Database=tempdb;UID=sa;PWD=Password!123;"
@@ -217,7 +227,7 @@ jobs:
           cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: |
-          cmake --build ${{ github.workspace }}/build --config Release --target postgresql_tests 
+          cmake --build ${{ github.workspace }}/build --config Release --target postgresql_tests
       - name: Test
         run: |
           $env:NANODBC_TEST_CONNSTR_PGSQL="Driver={PostgreSQL ANSI(x64)};Server=localhost;Port=5432;Database=nanodbc;UID=postgres;PWD="
@@ -240,7 +250,7 @@ jobs:
           cmake -S ${{ github.workspace }} -B ${{ github.workspace }}/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: |
-          cmake --build ${{ github.workspace }}/build --config Release --target sqlite_tests 
+          cmake --build ${{ github.workspace }}/build --config Release --target sqlite_tests
       - name: Test
         run: |
           ctest --test-dir ${{ github.workspace }}/build --build-config Release --output-on-failure --no-tests=error -R sqlite_tests
