@@ -29,10 +29,9 @@ jobs:
         cxxstd: ['14', '17', '20']
         vs: ['2019', '2022']
         architecture: ['x64']
-        os: [windows-2019, windows-2022]
         with_boost: [true, false]
     name: build-vs${{ matrix.vs }}-${{ matrix.vs == '2019' && 'v142' || 'v143' }}-std-${{ matrix.cxxstd }}
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-${{ matrix.vs }}
     steps:
       - uses: actions/checkout@v3
       - name: Check
