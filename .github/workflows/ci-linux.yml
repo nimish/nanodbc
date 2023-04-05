@@ -93,7 +93,7 @@ jobs:
             ]
         with_boost: [true, false]
 
-    name: build-${{ matrix.cxx }}++-${{ matrix.compiler_version }}-std-${{ matrix.cxxstd }}
+    name: build-${{ matrix.cxx }}++-${{ matrix.compiler_version }}-std-${{ matrix.cxxstd }}${{ matrix.with_boost && '-boost' || ''}}
 
     runs-on: >
       ${{ matrix.compiler_version < 7 && 'ubuntu-18.04' || ''}}

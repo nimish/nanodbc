@@ -30,7 +30,7 @@ jobs:
         vs: ['2019', '2022']
         architecture: ['x64']
         with_boost: [true, false]
-    name: build-vs${{ matrix.vs }}-${{ matrix.vs == '2019' && 'v142' || 'v143' }}-std-${{ matrix.cxxstd }}
+    name: build-vs${{ matrix.vs }}-${{ matrix.vs == '2019' && 'v142' || 'v143' }}-std-${{ matrix.cxxstd }}${{ matrix.with_boost && '-boost' || ''}}
     runs-on: windows-${{ matrix.vs }}
     steps:
       - uses: actions/checkout@v3
