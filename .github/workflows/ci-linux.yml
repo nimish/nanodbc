@@ -113,7 +113,6 @@ jobs:
           sudo apt-get install -y cmake ${{ matrix.cc }} ${{ matrix.pkg }}
       - name: Check
         run: |
-          echo && type clang++ && which clang++ && clang++ --version
           echo && type ${CXX} && which ${CXX} && ${CXX} --version
           echo && type cmake && which cmake && cmake --version
       - name: Configure
@@ -130,7 +129,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Check
         run: |
-          echo && type g++ && which g++ && g++ --version
+          echo && type ${CXX} && which ${CXX} && ${CXX} --version
           echo && type cmake && which cmake && cmake --version
       - name: Configure
         run: |
@@ -233,4 +232,3 @@ jobs:
       - name: Test
         run: |
           ctest --test-dir ${{ github.workspace }}/build --output-on-failure --no-tests=error -R sqlite_tests
- 
