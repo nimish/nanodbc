@@ -7,19 +7,19 @@ name: "CI Linux"
 on:
   push:
     branches:
-    - main
-    - ml/*
+      - main
+      - ml/*
     paths:
-      - '**.cpp'
-      - '**.h'
-      - '**/CMakeLists.txt'
-      - '.github/workflows/ci-linux.yml'
+      - "**.cpp"
+      - "**.h"
+      - "**/CMakeLists.txt"
+      - ".github/workflows/ci-linux.yml"
   pull_request:
     paths:
-      - '**.cpp'
-      - '**.h'
-      - '**/CMakeLists.txt'
-      - '.github/workflows/ci-linux.yml'
+      - "**.cpp"
+      - "**.h"
+      - "**/CMakeLists.txt"
+      - ".github/workflows/ci-linux.yml"
 
 jobs:
   build-gcc:
@@ -31,18 +31,18 @@ jobs:
           #- { cxxstd: '20', cxx: g++-12, cc: gcc-12, os: ubuntu-22.04 }
           #- { cxxstd: '17', cxx: g++-12, cc: gcc-12, os: ubuntu-22.04 }
           #- { cxxstd: '14', cxx: g++-12, cc: gcc-12, os: ubuntu-22.04 }
-          - { cxxstd: '17', cxx: g++-11, cc: gcc-11, os: ubuntu-22.04 }
-          - { cxxstd: '14', cxx: g++-11, cc: gcc-11, os: ubuntu-22.04 }
-          - { cxxstd: '17', cxx: g++-10, cc: gcc-10, os: ubuntu-22.04 }
-          - { cxxstd: '14', cxx: g++-10, cc: gcc-10, os: ubuntu-22.04 }
-          - { cxxstd: '17', cxx: g++-9,  cc: gcc-9,  os: ubuntu-20.04 }
-          - { cxxstd: '14', cxx: g++-9,  cc: gcc-9,  os: ubuntu-20.04 }
-          - { cxxstd: '17', cxx: g++-8,  cc: gcc-8,  os: ubuntu-20.04 }
-          - { cxxstd: '14', cxx: g++-8,  cc: gcc-8,  os: ubuntu-20.04 }
-          - { cxxstd: '17', cxx: g++-7,  cc: gcc-7,  os: ubuntu-18.04 }
-          - { cxxstd: '14', cxx: g++-7,  cc: gcc-7,  os: ubuntu-18.04 }
-          - { cxxstd: '14', cxx: g++-6,  cc: gcc-6,  os: ubuntu-18.04 }
-          - { cxxstd: '14', cxx: g++-5,  cc: gcc-5,  os: ubuntu-18.04 }
+          - { cxxstd: "17", cxx: g++-11, cc: gcc-11, os: ubuntu-22.04 }
+          - { cxxstd: "14", cxx: g++-11, cc: gcc-11, os: ubuntu-22.04 }
+          - { cxxstd: "17", cxx: g++-10, cc: gcc-10, os: ubuntu-22.04 }
+          - { cxxstd: "14", cxx: g++-10, cc: gcc-10, os: ubuntu-22.04 }
+          - { cxxstd: "17", cxx: g++-9, cc: gcc-9, os: ubuntu-20.04 }
+          - { cxxstd: "14", cxx: g++-9, cc: gcc-9, os: ubuntu-20.04 }
+          - { cxxstd: "17", cxx: g++-8, cc: gcc-8, os: ubuntu-20.04 }
+          - { cxxstd: "14", cxx: g++-8, cc: gcc-8, os: ubuntu-20.04 }
+          - { cxxstd: "17", cxx: g++-7, cc: gcc-7, os: ubuntu-18.04 }
+          - { cxxstd: "14", cxx: g++-7, cc: gcc-7, os: ubuntu-18.04 }
+          - { cxxstd: "14", cxx: g++-6, cc: gcc-6, os: ubuntu-18.04 }
+          - { cxxstd: "14", cxx: g++-5, cc: gcc-5, os: ubuntu-18.04 }
 
     name: build-${{ matrix.cc }}-std-${{ matrix.cxxstd }}
 
@@ -74,26 +74,44 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cxxstd: ['14', '17', '20']
-          - cxx: ['clang']
-          - compiler_version: ["3.9","4.0", "5.0", '6.0','7', '8', '9', '10','11','12','13','14','15']
+          - cxxstd: [14, 17, 20]
+          - cxx: [clang]
+          - compiler_version:
+              [
+                "3.9",
+                "4.0",
+                "5.0",
+                "6.0",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+              ]
           - with_boost: [true, false]
 
-    name: build-${{ matrix.cxx }}++-${{matrix.compiler_version}}-std-${{ matrix.cxxstd }}
+    name: build-${{ matrix.cxx }}++-${{ matrix.compiler_version }}-std-${{ matrix.cxxstd }}
 
-    runs-on: ${{ matrix.compiler_version < 7 && 'ubuntu-18.04'}} ${{ matrix.compiler_version >= 7 && matrix.compiler_version < 13 && 'ubuntu-20.04'}} ${{ matrix.compiler_version >= 13 && 'ubuntu-22.04'}}
+    runs-on: >
+      ${{ matrix.compiler_version < 7 && 'ubuntu-18.04' || ''}}
+      ${{ matrix.compiler_version >= 7 && matrix.compiler_version < 13 && 'ubuntu-20.04' || ''}}
+      ${{ matrix.compiler_version >= 13 && 'ubuntu-22.04' || ''}}
 
     env:
-      CC: ${{ matrix.cxx }}-${{matrix.compiler_version}}
-      CXX: ${{ matrix.cxx }}++-${{matrix.compiler_version}}
+      CC: ${{ matrix.cxx }}-${{ matrix.compiler_version }}
+      CXX: ${{ matrix.cxx }}++-${{ matrix.compiler_version }}
 
     steps:
       - uses: actions/checkout@v3
       - name: Install
         run: >
           sudo apt-get install -y cmake ${CC}
-          ${{ matrix.compiler_version < 7 && 'libc++-dev libc++abi-dev'}}
-          ${{matrix.compiler_version >= 7 && format('libc++-{0}-dev libc++abi-{0}-dev', matrix.compiler_version)}}
+          ${{ matrix.compiler_version < 7 && 'libc++-dev libc++abi-dev' || ''}}
+          ${{ matrix.compiler_version >= 7 && format('libc++-{0}-dev libc++abi-{0}-dev', matrix.compiler_version) || ''}}
       - name: Check
         run: |
           echo && type ${CXX} && which ${CXX} && ${CXX} --version
@@ -178,7 +196,7 @@ jobs:
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
         ports:
-        - 1433:1433
+          - 1433:1433
         env:
           ACCEPT_EULA: Y
           SA_PASSWORD: Password!123
